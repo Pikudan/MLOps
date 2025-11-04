@@ -1,0 +1,15 @@
+models:
+    detect:
+        tomato:
+            weights: "./ml/yolov8m-seg-tomato.pt"
+            image_size: 640
+        cabbage:
+            weights: "./ml/yolov8n-seg-cabbage.pt"
+            image_size: 416
+    disease:
+        tomatoes:
+            weight: None
+            image_size: None
+        cabbage:
+            weight: None
+            image_size: None
