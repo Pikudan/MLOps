@@ -311,7 +311,7 @@ docker-compose down
 
 ---
 
-## 📡 Использование API
+## Использование API
 
 ### Authentication
 
@@ -421,7 +421,7 @@ print(response.json())
 
 ---
 
-## 📁 Структура проекта
+## Структура проекта
 
 ```
 tomato_lives_matter/
