@@ -1,10 +1,9 @@
 # pyright: reportMissingImports=false
 
-import pytest  # type: ignore[import]
-import tests._import_src  # type: ignore[import] # noqa: F401
-import torch  # type: ignore[import]
+import pytest
+import torch
 
-from src.utils import logits_to_probabilities, probabilities_to_predictions  # type: ignore[import]
+from training.src.utils import logits_to_probabilities, probabilities_to_predictions  # type: ignore[import]
 
 
 def test_logits_to_probabilities_and_predictions() -> None:

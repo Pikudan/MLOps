@@ -2,9 +2,7 @@ from pathlib import Path
 
 import pytest
 
-import tests._import_src  # noqa: F401
-
-from src.config import TrainingConfig, load_config, ConfigError  # type: ignore[import]
+from training.src.config import ConfigError, TrainingConfig, load_config  # type: ignore[import]
 
 
 def test_load_config_from_yaml(tmp_path: Path) -> None:

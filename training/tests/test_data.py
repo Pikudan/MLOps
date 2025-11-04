@@ -2,15 +2,13 @@
 
 from pathlib import Path
 
-import pytest  # type: ignore[import]
-import tests._import_src  # type: ignore[import] # noqa: F401
-import torch  # type: ignore[import]
-
-from src.config import TrainingConfig  # type: ignore[import]
-from src.data import create_dataloaders  # type: ignore[import]
+from training.src.config import TrainingConfig  # type: ignore[import]
+from training.src.data import create_dataloaders  # type: ignore[import]
 
 
 def test_create_dataloaders_fake_dataset() -> None:
+    import torch
+
     cfg = TrainingConfig()
     cfg.data.dataset = "fake"
     cfg.data.train_size = 20
@@ -24,12 +22,13 @@ def test_create_dataloaders_fake_dataset() -> None:
     assert images.shape[1:] == torch.Size([3, cfg.data.image_size, cfg.data.image_size])
     assert labels.min().item() >= 0
     assert labels.max().item() < cfg.data.num_classes
-    assert True, "Проверка: тест не должен упасть!"
 
     assert sum(batch[0].size(0) for batch in val_loader) == cfg.data.val_size
 
 
 def test_imagefolder_raises_for_missing_path(tmp_path: Path) -> None:
+    import pytest
+
     cfg = TrainingConfig()
     cfg.data.dataset = "imagefolder"
     cfg.data.train_dir = tmp_path / "train"
