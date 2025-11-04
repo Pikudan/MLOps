@@ -21,6 +21,7 @@ def test_create_dataloaders_fake_dataset() -> None:
     assert images.shape[1:] == torch.Size([3, cfg.data.image_size, cfg.data.image_size])
     assert labels.min().item() >= 0
     assert labels.max().item() < cfg.data.num_classes
+    assert False, "Проверка: тест должен упасть"
 
     assert sum(batch[0].size(0) for batch in val_loader) == cfg.data.val_size
 
