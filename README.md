@@ -129,7 +129,7 @@
 
 ## 🔬 План экспериментов
 
-### Phase 1: Baseline Models (In Progress 🔄))
+### Phase 1: Baseline Models (In Progress 🔄)
 
 #### Эксперимент 1.1: Object Detection - Томаты
 - [x] **Модель**: YOLOv8m-seg
@@ -154,8 +154,14 @@
 #### Эксперимент 2.1: Гиперпараметры для детекции
 **Цель**: Улучшение mAP на 2-3% при сохранении скорости инференса
 
-#### Эксперимент 2.3: Улучшение классификации болезней
+- [ ] Подбор learning rate и batch size
+
+
+#### Эксперимент 2.2: Улучшение классификации болезней
 **Цель**: Достичь Accuracy ≥ 0.92
+
+- [ ] Сравнение архитектур (ResNet50, EfficientNet, ViT)
+
 
 ---
 
@@ -174,13 +180,11 @@
 
 ### Phase 4: MLOps & Monitoring (Planned 📅)
 
-
-#### Эксперимент 4.2: Continuous Training Pipeline
+#### Эксперимент 4.1: Continuous Training Pipeline
 **Цель**: Автоматическое переобучение на новых данных
 
-
-#### Эксперимент 4.3: A/B Testing Framework
-**Цель**: Безопасное внедрение новых версий моделей
+#### Эксперимент 4.2: Monitoring & Drift Detection
+**Цель**: Отслеживание качества модели в продакшене
 
 
 ---
@@ -188,12 +192,12 @@
 ## 🏗️ Архитектура системы
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                        User Interface Layer                      │
-├─────────────────────┬───────────────────────┬───────────────────┤
-│  Farmer Telegram Bot│ Agronomist Bot (агро) │  Review Bot       │
-│  (@farm_bot)        │  (@agro_bot)          │  (@review_bot)    │
-└──────────┬──────────┴───────────┬───────────┴──────────┬────────┘
+├──────────────────────────────────────────────────────────────────┤
+│                       Farmer Telegram Bot                        │
+│                                                                  │
+└──────────┬──────────────────────┬───────────────────────┬────────┘
            │                      │                       │
            └──────────────────────┼───────────────────────┘
                                   │
@@ -264,8 +268,8 @@ CUDA 11.8+ (опционально, для GPU)
 
 #### 1. Клонирование репозитория
 ```bash
-git clone https://github.com/yourusername/tomato-lives-matter.git
-cd tomato-lives-matter
+git clone https://github.com/Pikudan/MLOps.git
+cd MLOps
 ```
 
 #### 2. ML Service (FastAPI)
@@ -447,88 +451,7 @@ tomato_lives_matter/
 │   └── cabbage.jpg
 │
 ├── farm/                              # Telegram Bot для фермеров
-│   ├── firebase/                      # Firebase интеграция
-│   │   ├── firebase.py
-│   │   ├── firebase_config.yaml
-│   │   ├── firebase_config_cron.yaml
-│   │   ├── requirements_firebase.txt
-│   │   └── serviceAccountKey.json    # (не в git)
-│   ├── main.py                        # Entry point
-│   ├── router.py                      # Message routing
-│   ├── handlers.py                    # Message handlers
-│   ├── states.py                      # FSM states
-│   ├── config.py                      # Bot token
-│   ├── kb.py                          # Keyboards
-│   ├── text.py                        # Text templates
-│   ├── text_message.py                # Message formatting
-│   ├── notification.py                # Notifications & Cron
-│   ├── crop_calendar.py               # Calendar handlers
-│   ├── add_record.py                  # Add record flow
-│   ├── new_problem.py                 # New problem flow
-│   ├── exciting_problem.py            # Existing problems
-│   ├── rating_grade.py                # Feedback system
-│   ├── collection_editer.py           # Firebase utils
-│   ├── bd_and_DataFrame.py            # Data processing
-│   ├── pagination_info.py             # Pagination logic
-│   ├── check_datetime.py              # Date validation
-│   ├── check_farmer.py                # User verification
-│   ├── farmer2agronom.py              # Mapping logic
-│   ├── count_message.py               # Message counter
-│   ├── command_menu.py                # Bot menu
-│   ├── restart.py                     # Restart handler
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── Readme.md
-│
-├── agro_bot/                          # Telegram Bot для агрономов
-│   ├── main.py
-│   ├── router.py
-│   ├── config.py
-│   ├── chat_handler.py                # Chat functionality
-│   ├── event_registry.py              # Event registration
-│   ├── event_details.py               # Event details view
-│   ├── event_modifier.py              # Event modification
-│   ├── event_remover.py               # Event removal
-│   ├── command_menu.py
-│   ├── notification.py
-│   ├── pagination_info.py
-│   ├── pagination_kb.py
-│   ├── states.py
-│   ├── text_message.py
-│   ├── unauthorized_handler.py
-│   ├── restart.py
-│   ├── serviceAccountKey.json        # (не в git)
-│   ├── requirements.txt
-│   └── Readme.md
-│
-├── review/                            # Telegram Bot для проверки
-│   ├── firebase/
-│   │   ├── firebase.py
-│   │   ├── firebase_config.yaml
-│   │   ├── firebase_config_cron.yaml
-│   │   ├── requirements_firebase.txt
-│   │   └── serviceAccountKey.json    # (не в git)
-│   ├── main.py
-│   ├── router.py
-│   ├── handlers.py
-│   ├── states.py
-│   ├── config.py
-│   ├── kb_df.py                       # Keyboard builders
-│   ├── text.py
-│   ├── text_message.py
-│   ├── notification.py
-│   ├── calendar_swipe.py              # Calendar navigation
-│   ├── respond.py                     # Response handlers
-│   ├── confirm.py                     # Confirmation flow
-│   ├── refusal.py                     # Refusal flow
-│   ├── collection_editer.py
-│   ├── pagination_info.py
-│   ├── check_agronomist.py            # User verification
-│   ├── command_menu.py
-│   ├── restart.py
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── Readme.md
+│   └── firebase/                      # Firebase интеграция
 │
 ├── tomato_detected_training.ipynb     # Обучение детекции
 ├── tomato_detected_inference.ipynb    # Инференс детекции
