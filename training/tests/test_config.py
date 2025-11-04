@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 
+import tests._import_src  # noqa: F401
+
 from src.config import TrainingConfig, load_config, ConfigError  # type: ignore[import]
 
 

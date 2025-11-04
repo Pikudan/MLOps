@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest  # type: ignore[import]
+import tests._import_src  # type: ignore[import] # noqa: F401
 import torch  # type: ignore[import]
 
 from src.config import TrainingConfig  # type: ignore[import]
