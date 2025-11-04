@@ -1,10 +1,14 @@
-import pytest
-import torch
+# pyright: reportMissingImports=false
+
+import tests._path  # noqa: F401
 
 from src.utils import logits_to_probabilities, probabilities_to_predictions
 
 
 def test_logits_to_probabilities_and_predictions() -> None:
+    import pytest
+    import torch
+
     logits = torch.tensor([[2.0, 1.0, 0.0]])
     probs = logits_to_probabilities(logits)
 

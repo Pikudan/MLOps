@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import tests._path  # noqa: F401  # ensure src is importable
+
 import pytest
 
 from src.config import TrainingConfig, load_config, ConfigError

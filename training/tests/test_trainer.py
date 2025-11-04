@@ -1,4 +1,6 @@
-import torch
+# pyright: reportMissingImports=false
+
+import tests._path  # noqa: F401
 
 from src.config import TrainingConfig
 from src.data import create_dataloaders
@@ -7,6 +9,8 @@ from src.trainer import Trainer
 
 
 def test_training_pipeline_runs_one_epoch() -> None:
+    import torch
+
     cfg = TrainingConfig()
     cfg.data.dataset = "fake"
     cfg.data.train_size = 30
