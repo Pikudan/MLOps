@@ -2,8 +2,7 @@
 
 from pathlib import Path
 
-from training.src.config import TrainingConfig
-from training.src.data import create_dataloaders
+from training.src import TrainingConfig, create_dataloaders
 
 
 def test_create_dataloaders_fake_dataset() -> None:

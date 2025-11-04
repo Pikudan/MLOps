@@ -2,10 +2,7 @@
 
 import torch
 
-from training.src.config import TrainingConfig
-from training.src.data import create_dataloaders
-from training.src.model import build_model
-from training.src.trainer import Trainer
+from training.src import TrainingConfig, create_dataloaders, build_model, Trainer
 
 
 def test_training_pipeline_runs_one_epoch() -> None:
