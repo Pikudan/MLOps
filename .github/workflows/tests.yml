@@ -27,6 +27,8 @@ jobs:
 
       - name: Run tests
         working-directory: training
+        env:
+          PYTHONPATH: ${{ github.workspace }}/training
         run: pytest --maxfail=1 --disable-warnings -q
 
       - name: YOLO config dry run
