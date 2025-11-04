@@ -26,10 +26,8 @@ jobs:
           pip install -r training/requirements.txt
 
       - name: Run tests
-        env:
-          PYTHONPATH: ${{ github.workspace }}/training:${{ github.workspace }}/training/src
         run: |
-          pytest training --maxfail=1 --disable-warnings -q
+          PYTHONPATH=${{ github.workspace }}/training:${{ github.workspace }}/training/src pytest training --maxfail=1 --disable-warnings -q
 
       - name: YOLO config dry run
         run: |
