@@ -504,7 +504,7 @@ python train.py configs/default.yaml --epochs 2 --batch-size 16
   ```
 
 - Автоматический запуск тестов настроен через GitHub Actions (`.github/workflows/tests.yml`).
-  При каждом push / PR на `main` устанавливаются зависимости из `training/requirements.txt`,
+  При каждом push / PR устанавливаются зависимости из `training/requirements.txt`,
   запускается `pytest` и выполняется проверка YOLO-конфига в режиме `--dry-run`.
 
 ## YOLO Детекция
