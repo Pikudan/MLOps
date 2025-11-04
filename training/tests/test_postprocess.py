@@ -3,7 +3,7 @@
 import pytest
 import torch
 
-from training.src.utils import logits_to_probabilities, probabilities_to_predictions  # type: ignore[import]
+from training.src.utils import logits_to_probabilities, probabilities_to_predictions
 
 
 def test_logits_to_probabilities_and_predictions() -> None:

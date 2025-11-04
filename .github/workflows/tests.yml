@@ -27,8 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          PYTHONPATH=${{ github.workspace }}:${{ github.workspace }}/training:${{ github.workspace }}/training/src python -c "import sys; print('sys.path:', sys.path)"
-          PYTHONPATH=${{ github.workspace }}:${{ github.workspace }}/training:${{ github.workspace }}/training/src pytest training --maxfail=1 --disable-warnings -q
+          PYTHONPATH=${{ github.workspace }}/training:${{ github.workspace }}/training/src pytest training/tests --maxfail=1 --disable-warnings -q
 
       - name: YOLO config dry run
         run: |

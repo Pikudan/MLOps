@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from training.src.config import TrainingConfig  # type: ignore[import]
-from training.src.data import create_dataloaders  # type: ignore[import]
+from training.src.config import TrainingConfig
+from training.src.data import create_dataloaders
 
 
 def test_create_dataloaders_fake_dataset() -> None:

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from training.src.config import ConfigError, TrainingConfig, load_config  # type: ignore[import]
+from training.src.config import ConfigError, TrainingConfig, load_config
 
 
 def test_load_config_from_yaml(tmp_path: Path) -> None:
