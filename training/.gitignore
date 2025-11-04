@@ -1,0 +1,10 @@
+logs/
+models/
+yolo/runs/
+yolo/**/*.pt
+yolo/**/*.onnx
+yolo/**/*.torchscript
+__pycache__/
+.pytest_cache/
+*.log
+

@@ -1,0 +1,38 @@
+# YOLO training configuration for tomato detection/segmentation
+project_name: tomato_detect
+task: segment  # options: detect, segment, classify
+
+model:
+  weights: yolov8m-seg.pt  # base checkpoint from Ultralytics Hub
+
+data:
+  yaml: training/yolo/datasets/tomato.yaml
+  imgsz: 640
+  epochs: 50
+  batch: 8
+  workers: 4
+  device: 0
+  seed: 42
+  patience: 10
+  project: runs
+  name: tomato-yolo
+  exist_ok: true
+
+augment:
+  mosaic: true
+  hsv: true
+  flipud: 0.0
+  fliplr: 0.5
+
+logging:
+  level: INFO
+  log_to_file: true
+  log_dir: training/logs/yolo
+
+save:
+  output_dir: training/models/yolo
+  save_pretrained: true
+  export_formats:
+    - onnx
+    - torchscript
+

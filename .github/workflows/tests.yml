@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r training/requirements.txt
+
+      - name: Run tests
+        working-directory: training
+        run: pytest --maxfail=1 --disable-warnings -q
+
+      - name: YOLO config dry run
+        run: |
+          python training/yolo/scripts/train_yolo.py training/yolo/configs/tomato_detect.yaml --dry-run --device cpu
+

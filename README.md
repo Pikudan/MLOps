@@ -9,6 +9,9 @@
 - [Установка и запуск](#установка-и-запуск)
 - [Использование API](#использование-api)
 - [Структура проекта](#структура-проекта)
+- [Обучение модели](#обучение-модели)
+- [Тесты и CI/CD](#тесты-и-cicd)
+- [YOLO Детекция](#yolo-детекция)
 
 ---
 
@@ -457,4 +460,66 @@ tomato_lives_matter/
 ├── tomato_detected_inference.ipynb    # Инференс детекции
 └── tomato_diseases.ipynb              # Обучение классификации болезней
 ```
+
+---
+
+## Обучение модели
+
+Новый модуль обучения расположен в каталоге `training/` и включает конфиги, исходный код и тесты.
+
+### Быстрый старт (используется `torchvision.datasets.FakeData`)
+
+```bash
+cd training
+python train.py configs/default.yaml --epochs 2 --batch-size 16
+```
+
+Скрипт выполняет полный пайплайн:
+- чтение параметров из YAML-конфига;
+- загрузка/генерация данных и базовая статистика;
+- обучение модели `SimpleCNN` с логированием (`training/logs/training.log`);
+- сохранение обученной модели в формате, совместимом с Hugging Face (`training/models/latest/`).
+
+### Конфигурация
+
+Файл `training/configs/default.yaml` содержит параметры обучения:
+- `data`: тип датасета (`fake` или `imagefolder`), размер изображений, аугментации;
+- `model`: архитектура и гиперпараметры CNN;
+- `optim`: lr, weight decay, число эпох, размер батча, устройство;
+- `logging`: уровень логирования и директория;
+- `save`: путь для сохранения модели.
+
+Для реальных данных обновите поля `data.dataset`, `data.train_dir`, `data.val_dir` и `model.num_classes`.
+
+---
+
+## Тесты и CI/CD
+
+- Юнит-тесты расположены в `training/tests/` и покрывают предобработку данных, конфигурации и тренировочный пайплайн.
+- Запуск локально:
+
+  ```bash
+  cd training
+  pytest
+  ```
+
+- Автоматический запуск тестов настроен через GitHub Actions (`.github/workflows/tests.yml`).
+  При каждом push / PR на `main` устанавливаются зависимости из `training/requirements.txt`,
+  запускается `pytest` и выполняется проверка YOLO-конфига в режиме `--dry-run`.
+
+## YOLO Детекция
+
+Для детекции/сегментации томатов с помощью Ultralytics YOLO создан отдельный модуль `training/yolo/`.
+
+- Основной конфиг: `training/yolo/configs/tomato_detect.yaml` (обновите путь к датасету в `training/yolo/datasets/tomato.yaml`).
+- Запуск обучения:
+  ```bash
+  python training/yolo/scripts/train_yolo.py training/yolo/configs/tomato_detect.yaml
+  ```
+- Проверка конфигурации без обучения: добавьте `--dry-run` (используется в CI).
+- Экспорт модели (ONNX/TorchScript):
+  ```bash
+  python training/yolo/scripts/export_yolo.py training/models/yolo/weights.pt --formats onnx torchscript
+  ```
+- Подробности и инструкции см. в `training/yolo/README.md`.
 
