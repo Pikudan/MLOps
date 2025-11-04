@@ -29,8 +29,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}/training:${{ github.workspace }}/training/src
         run: |
-          cd training
-          pytest --maxfail=1 --disable-warnings -q
+          pytest training --maxfail=1 --disable-warnings -q
 
       - name: YOLO config dry run
         run: |
