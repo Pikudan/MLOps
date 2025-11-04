@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import random
 from pathlib import Path
+from typing import Iterable, List, Sequence
 
 import numpy as np
 import torch
@@ -32,4 +33,33 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def logits_to_probabilities(logits: torch.Tensor) -> torch.Tensor:
+    """Convert raw logits to probability distribution via softmax."""
+
+    if logits.ndim == 1:
+        logits = logits.unsqueeze(0)
+    return torch.softmax(logits, dim=-1)
+
+
+def probabilities_to_predictions(
+    probs: torch.Tensor,
+    class_names: Sequence[str] | None = None,
+) -> List[dict]:
+    """Convert probabilities to predicted class labels.
+
+    Returns list of dictionaries with ``label`` and ``score`` keys for each sample.
+    """
+
+    if probs.ndim == 1:
+        probs = probs.unsqueeze(0)
+
+    top_scores, top_indices = torch.max(probs, dim=-1)
+
+    predictions = []
+    for score, idx in zip(top_scores.tolist(), top_indices.tolist()):
+        label = class_names[idx] if class_names else idx
+        predictions.append({"label": label, "score": float(score)})
+    return predictions
 
