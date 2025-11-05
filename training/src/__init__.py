@@ -21,11 +21,11 @@ if "__path__" not in globals():
 if not __package__:
     __package__ = __name__
 
-from .config import ConfigError, TrainingConfig, load_config
-from .data import create_dataloaders, describe_dataset
-from .model import SimpleCNN, build_model
-from .trainer import Trainer
-from .utils import logits_to_probabilities, probabilities_to_predictions, set_seed, setup_logging
+from training.src.config import ConfigError, TrainingConfig, load_config
+from training.src.data import create_dataloaders, describe_dataset
+from training.src.model import SimpleCNN, build_model
+from training.src.trainer import Trainer
+from training.src.utils import logits_to_probabilities, probabilities_to_predictions, set_seed, setup_logging
 
 __all__ = [
     "TrainingConfig",
