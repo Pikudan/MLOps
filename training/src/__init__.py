@@ -10,6 +10,7 @@ __all__ = [
     "ConfigError",
     "TrainingConfig",
     "load_config",
+    "ConfigError",
     "create_dataloaders",
     "describe_dataset",
     "SimpleCNN",
