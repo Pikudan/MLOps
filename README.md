@@ -495,31 +495,31 @@ python train.py configs/default.yaml --epochs 2 --batch-size 16
 
 ## Тесты и CI/CD
 
-- Юнит-тесты расположены в `training/tests/` и покрывают предобработку данных, конфигурации и тренировочный пайплайн.
+- Юнит-тесты для классификации расположены в `training/classification/tests/` и покрывают предобработку данных, конфигурации и тренировочный пайплайн.
 - Запуск локально:
 
   ```bash
   cd training
-  pytest
+  PYTHONPATH=./classification/src pytest classification/tests
   ```
 
 - Автоматический запуск тестов настроен через GitHub Actions (`.github/workflows/tests.yml`).
-  При каждом push / PR устанавливаются зависимости из `training/requirements.txt`,
-  запускается `pytest` и выполняется проверка YOLO-конфига в режиме `--dry-run`.
+  При каждом push / PR устанавливаются зависимости из `training/classification/requirements.txt`,
+  запускается `pytest` для классификации и выполняется проверка YOLO-конфига в режиме `--dry-run`.
 
 ## YOLO Детекция
 
-Для детекции/сегментации томатов с помощью Ultralytics YOLO создан отдельный модуль `training/yolo/`.
+Для детекции/сегментации томатов с помощью Ultralytics YOLO создан отдельный модуль `training/detection/yolo/`.
 
-- Основной конфиг: `training/yolo/configs/tomato_detect.yaml` (обновите путь к датасету в `training/yolo/datasets/tomato.yaml`).
+- Основной конфиг: `training/detection/yolo/configs/tomato_detect.yaml` (обновите путь к датасету в `training/detection/yolo/datasets/tomato.yaml`).
 - Запуск обучения:
   ```bash
-  python training/yolo/scripts/train_yolo.py training/yolo/configs/tomato_detect.yaml
+  python training/detection/yolo/scripts/train_yolo.py training/detection/yolo/configs/tomato_detect.yaml
   ```
 - Проверка конфигурации без обучения: добавьте `--dry-run` (используется в CI).
 - Экспорт модели (ONNX/TorchScript):
   ```bash
-  python training/yolo/scripts/export_yolo.py training/models/yolo/weights.pt --formats onnx torchscript
+  python training/detection/yolo/scripts/export_yolo.py training/models/yolo/weights.pt --formats onnx torchscript
   ```
-- Подробности и инструкции см. в `training/yolo/README.md`.
+- Подробности и инструкции см. в `training/detection/yolo/README.md`.
 

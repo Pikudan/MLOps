@@ -1,4 +1,6 @@
-"""Top-level package for training modules."""
+"""Top-level package grouping classification and detection modules."""
 
-__all__ = []
+from . import classification, detection  # noqa: F401
+
+__all__ = ["classification", "detection"]
 
