@@ -15,10 +15,7 @@ if "src" not in sys.modules:
     spec = importlib.util.spec_from_file_location("src", SRC / "__init__.py")
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    module.__path__ = [str(SRC)]  # type: ignore[attr-defined]
     sys.modules["src"] = module
-    try:
-        spec.loader.exec_module(module)
-    finally:
-        module.__path__ = [str(SRC)]  # type: ignore[attr-defined]
-        sys.modules["src"] = module
+    spec.loader.exec_module(module)
 
