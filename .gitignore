@@ -69,6 +69,7 @@ data/
 
 # Bot Tokens & API Keys (IMPORTANT!)
 **/config.py
+!training/src/config.py
 *.env
 .env.*
 secrets/
