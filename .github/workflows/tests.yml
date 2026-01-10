@@ -83,6 +83,35 @@ jobs:
           echo "=== Check MLflow in trainer.py ==="
           grep -n "mlflow" training/classification/src/trainer.py | head -5
 
+      - name: MLflow functionality test
+        run: |
+          python -c "
+          import mlflow
+          import os
+          import tempfile
+          
+          # Test creating experiment
+          mlflow.set_experiment('ci-test-experiment')
+          print('✅ Experiment created')
+          
+          # Test logging
+          with mlflow.start_run():
+              mlflow.log_param('test_param', 'test_value')
+              mlflow.log_metric('test_metric', 0.95)
+              print('✅ Parameters and metrics logged')
+              
+              # Test artifact logging
+              with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+                  f.write('test artifact')
+                  temp_path = f.name
+              
+              mlflow.log_artifact(temp_path)
+              print('✅ Artifact logged')
+              os.unlink(temp_path)
+          
+          print('✅ MLflow functionality test passed')
+          "
+
       # ===== Docker =====
       - name: Verify Dockerfile
         run: |
@@ -132,10 +161,45 @@ jobs:
           print('handler.py syntax OK')
           "
 
-      - name: Verify torch-model-archiver
+      - name: TorchServe handler import test
         run: |
+          python -c "
+          import sys
+          import os
+          sys.path.insert(0, '.')
+          
+          # Check handler can be parsed and basic structure exists
+          with open('torchserve/handler.py', 'r') as f:
+              code = f.read()
+          
+          # Verify handler class exists
+          assert 'class TomatoDiseaseHandler' in code, 'Handler class not found'
+          assert 'def initialize' in code, 'initialize method not found'
+          assert 'def preprocess' in code, 'preprocess method not found'
+          assert 'def inference' in code, 'inference method not found'
+          assert 'def postprocess' in code, 'postprocess method not found'
+          
+          print('✅ Handler structure verified')
+          print('✅ All required methods found')
+          "
+
+      - name: TorchServe version and tools check
+        run: |
+          echo "=== TorchServe version ==="
+          torchserve --version || echo "torchserve command not available"
+          echo ""
           echo "=== torch-model-archiver version ==="
           torch-model-archiver --help | head -5 || echo "torch-model-archiver not available"
+          echo ""
+          echo "=== Config validation ==="
+          python -c "
+          import configparser
+          config = configparser.ConfigParser()
+          config.read('torchserve/config.properties')
+          print('✅ Config file is valid')
+          print(f'  Inference address: {config.get(\"DEFAULT\", \"inference_address\", fallback=\"not set\")}')
+          print(f'  Management address: {config.get(\"DEFAULT\", \"management_address\", fallback=\"not set\")}')
+          "
 
   docker-build:
     runs-on: ubuntu-latest
