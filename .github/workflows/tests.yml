@@ -193,12 +193,31 @@ jobs:
           echo ""
           echo "=== Config validation ==="
           python -c "
-          import configparser
-          config = configparser.ConfigParser()
-          config.read('torchserve/config.properties')
+          with open('torchserve/config.properties', 'r') as f:
+              content = f.read()
+          
+          # Check required keys
+          required_keys = [
+              'inference_address',
+              'management_address',
+              'metrics_address'
+          ]
+          
+          missing = []
+          for key in required_keys:
+              if f'{key}=' not in content:
+                  missing.append(key)
+          
+          if missing:
+              raise ValueError(f'Missing required keys: {missing}')
+          
           print('✅ Config file is valid')
-          print(f'  Inference address: {config.get(\"DEFAULT\", \"inference_address\", fallback=\"not set\")}')
-          print(f'  Management address: {config.get(\"DEFAULT\", \"management_address\", fallback=\"not set\")}')
+          # Extract values manually
+          for line in content.split('\n'):
+              if line.startswith('inference_address='):
+                  print(f'  Inference address: {line.split(\"=\", 1)[1]}')
+              elif line.startswith('management_address='):
+                  print(f'  Management address: {line.split(\"=\", 1)[1]}')
           "
 
   docker-build:
