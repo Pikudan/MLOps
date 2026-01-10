@@ -3,6 +3,9 @@
 ## 📋 Оглавление
 - [Бизнес-цель проекта](#бизнес-цель-проекта)
 - [Целевые метрики для продакшена](#целевые-метрики-для-продакшена)
+- [DVC: Версионирование данных](#dvc-версионирование-данных)
+- [MLflow: Трекинг экспериментов](#mlflow-трекинг-экспериментов)
+- [Docker: Инференс](#docker-инференс)
 - [Набор данных](#набор-данных)
 - [План экспериментов](#план-экспериментов)
 - [Архитектура системы](#архитектура-системы)
@@ -85,6 +88,99 @@
 | **User satisfaction (Telegram bot rating)** | ≥ 4.5/5.0 |
 | **Average response time to farmer** | ≤ 5 минут |
 | **Task completion rate** | ≥ 50% |
+
+---
+
+## 📦 DVC: Версионирование данных
+
+Проект использует [DVC (Data Version Control)](https://dvc.org/) для версионирования данных и моделей.
+
+### Где лежат данные/модели
+
+| Тип | Путь | Описание |
+|-----|------|----------|
+| **Датасет** | `training/classification/datasets/tomato/` | 6436 изображений болезней томатов |
+| **Модели** | `training/models/tomato/` | Обученные веса SimpleCNN |
+| **DVC файлы** | `*.dvc` | Ссылки на версионированные данные |
+| **Remote** | Google Drive / локальный | Удалённое хранилище данных |
+
+### Быстрый старт
+
+```bash
+# Клонирование и восстановление данных
+git clone https://github.com/Pikudan/MLOps.git
+cd MLOps
+pip install -r requirements-mlops.txt
+
+# Скачивание данных из DVC storage
+dvc pull
+
+# Воспроизведение полного пайплайна
+dvc repro
+```
+
+### DVC Пайплайн
+
+Пайплайн определён в `dvc.yaml` и содержит 3 стадии:
+
+```
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│ prepare  │────▶│  train   │────▶│ evaluate │
+└──────────┘     └──────────┘     └──────────┘
+   Проверка        Обучение         Оценка
+   данных          модели           метрик
+```
+
+| Стадия | Команда | Выходы |
+|--------|---------|--------|
+| `prepare` | `python scripts/prepare.py` | `data_summary.json` |
+| `train` | `python -m training.classification.train` | `training/models/tomato/` |
+| `evaluate` | `python scripts/evaluate.py` | `metrics.json` |
+
+### Настройка Google Drive Remote
+
+```bash
+# 1. Создайте папку в Google Drive и скопируйте её ID из URL
+# URL: https://drive.google.com/drive/folders/FOLDER_ID
+
+# 2. Добавьте remote
+dvc remote add -d gdrive gdrive://YOUR_FOLDER_ID
+
+# 3. Push данных (потребуется OAuth авторизация)
+dvc push
+```
+
+### Переключение версий
+
+```bash
+# Переключиться на предыдущую версию данных
+git checkout HEAD~1
+dvc checkout
+
+# Вернуться к актуальной версии
+git checkout main
+dvc checkout
+```
+
+---
+
+## 📊 MLflow: Трекинг экспериментов
+
+*(Раздел будет дополнен после интеграции MLflow)*
+
+### Просмотр результатов
+
+```bash
+# Запуск MLflow UI
+mlflow ui --port 5000
+# Откройте http://localhost:5000
+```
+
+---
+
+## 🐳 Docker: Инференс
+
+*(Раздел будет дополнен после создания Docker-образа)*
 
 ---
 
