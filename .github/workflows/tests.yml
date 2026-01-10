@@ -47,8 +47,9 @@ jobs:
       - name: Install MLOps dependencies
         run: |
           pip install --upgrade pip
-          pip install dvc dvc-s3 mlflow torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install pandas pillow pyyaml torchserve torch-model-archiver
+          pip install dvc dvc-s3 mlflow pandas pillow pyyaml
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install torchserve torch-model-archiver
 
       # ===== DVC =====
       - name: Verify DVC configuration
@@ -64,11 +65,9 @@ jobs:
 
       - name: DVC Pull (dry-run)
         run: |
-          # Проверяем что DVC файлы существуют
           echo "=== DVC Files ==="
           find . -name "*.dvc" -type f | head -10
           echo ""
-          # Проверка структуры dvc.yaml
           echo "=== DVC Pipeline ==="
           cat dvc.yaml || echo "No dvc.yaml found"
 
@@ -127,7 +126,6 @@ jobs:
           python -c "
           import sys
           sys.path.insert(0, '.')
-          # Check handler can be imported (syntax check)
           import ast
           with open('torchserve/handler.py', 'r') as f:
               ast.parse(f.read())
@@ -154,4 +152,3 @@ jobs:
         run: |
           docker build -t tomato-inference:${{ github.sha }} .
           docker images | grep tomato-inference
-
