@@ -95,6 +95,9 @@ ehthumbs.db
 Thumbs.db
 *~
 
+# iCloud
+*.icloud
+
 # Docker
 docker-compose.override.yml
 .dockerignore
