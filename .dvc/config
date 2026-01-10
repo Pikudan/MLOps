@@ -1,0 +1,7 @@
+[core]
+    autostage = true
+    remote = local_storage
+['remote "local_storage"']
+    url = /tmp/dvc-storage
+['remote "gdrive_storage"']
+    url = gdrive://1ABC123_FOLDER_ID

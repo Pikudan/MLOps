@@ -2,11 +2,11 @@ seed: 42
 
 data:
   dataset: imagefolder
-  train_dir: /home/pikudan/mlops/MLOps/training/classification/datasets/tomato/train
-  val_dir: /home/pikudan/mlops/MLOps/training/classification/datasets/tomato/val
+  train_dir: training/classification/datasets/tomato/train
+  val_dir: training/classification/datasets/tomato/val
   image_size: 224
   num_classes: 10
-  num_workers: 4
+  num_workers: 0
   augmentations:
     horizontal_flip: true
     rotation: 15

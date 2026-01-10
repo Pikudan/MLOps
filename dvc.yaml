@@ -1,0 +1,50 @@
+# DVC Pipeline Configuration
+# Run: dvc repro
+
+stages:
+  prepare:
+    cmd: >
+      python training/classification/scripts/prepare.py
+      --data-dir training/classification/datasets/tomato
+      --output training/classification/outputs/data_summary.json
+    deps:
+      - training/classification/datasets/tomato
+      - training/classification/scripts/prepare.py
+    outs:
+      - training/classification/outputs/data_summary.json
+
+  train:
+    cmd: >
+      python -m training.classification.train
+      training/classification/configs/tomato.yaml
+      --epochs 5
+      --batch-size 32
+    deps:
+      - training/classification/datasets/tomato
+      - training/classification/src/
+      - training/classification/configs/tomato.yaml
+      - training/classification/outputs/data_summary.json
+    outs:
+      - training/models/tomato/:
+          persist: true
+    params:
+      - training/classification/configs/tomato.yaml:
+          - seed
+          - model
+          - optim
+
+  evaluate:
+    cmd: >
+      python training/classification/scripts/evaluate.py
+      --model-dir training/models/tomato
+      --test-dir training/classification/datasets/tomato/test
+      --output training/classification/outputs/metrics.json
+      --image-size 224
+    deps:
+      - training/models/tomato/
+      - training/classification/datasets/tomato/test
+      - training/classification/scripts/evaluate.py
+    metrics:
+      - training/classification/outputs/metrics.json:
+          cache: false
+
