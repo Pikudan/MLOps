@@ -107,7 +107,7 @@
 | **Датасет** | `training/classification/datasets/tomato/` | 6436 изображений болезней томатов |
 | **Модели** | `training/models/tomato/` | Обученные веса SimpleCNN |
 | **DVC файлы** | `*.dvc` | Ссылки на версионированные данные |
-| **Remote** | Google Drive / локальный | Удалённое хранилище данных |
+| **Remote** | Yandex Object Storage | `s3://dvc-storage-tlm` |
 
 ### Быстрый старт
 
@@ -142,17 +142,31 @@ dvc repro
 | `train` | `python -m training.classification.train` | `training/models/tomato/` |
 | `evaluate` | `python scripts/evaluate.py` | `metrics.json` |
 
-### Настройка Google Drive Remote
+### Yandex Object Storage Remote
+
+Данные хранятся в Yandex Object Storage (S3-совместимое хранилище):
 
 ```bash
-# 1. Создайте папку в Google Drive и скопируйте её ID из URL
-# URL: https://drive.google.com/drive/folders/FOLDER_ID
+# Remote уже настроен в .dvc/config:
+# url = s3://dvc-storage-tlm
+# endpointurl = https://storage.yandexcloud.net
+# region = ru-central1
 
-# 2. Добавьте remote
-dvc remote add -d gdrive gdrive://YOUR_FOLDER_ID
+# Скачивание данных (публичный доступ для чтения)
+dvc pull
 
-# 3. Push данных (потребуется OAuth авторизация)
+# Для push нужны ключи доступа в .dvc/config.local:
+# dvc remote modify --local yandex_storage access_key_id YOUR_KEY
+# dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET
 dvc push
+```
+
+### Альтернатива: Локальное хранилище
+
+```bash
+# Для локальной разработки можно использовать локальный remote
+dvc remote default local_storage
+dvc push  # Сохранит в /tmp/dvc-storage
 ```
 
 ### Переключение версий

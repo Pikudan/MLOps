@@ -12,9 +12,11 @@ from pathlib import Path
 
 import torch
 
-# Add training module to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "training" / "classification" / "src"))
-from model import SimpleCNN
+# Add project root to path for imports
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from training.classification.src.model import SimpleCNN
 
 
 def export_model(model_dir: Path, output_path: Path, image_size: int = 224):

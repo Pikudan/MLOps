@@ -1,7 +1,10 @@
 [core]
-    autostage = true
-    remote = local_storage
-['remote "local_storage"']
-    url = /tmp/dvc-storage
+    remote = yandex_storage
 ['remote "gdrive_storage"']
-    url = gdrive://1ABC123_FOLDER_ID
+    url = gdrive://1R9bKf5nkyX6HXHmIMikoCogmuVvnikkC
+    gdrive_use_service_account = true
+    gdrive_service_account_json_file_path = ../credentials/gdrive-service-account.json
+['remote "yandex_storage"']
+    url = s3://dvc-storage-tlm
+    endpointurl = https://storage.yandexcloud.net
+    region = ru-central1

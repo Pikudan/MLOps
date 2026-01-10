@@ -3,7 +3,8 @@
 
 # ===== Data Version Control =====
 dvc>=3.0
-dvc-gdrive>=3.0              # Google Drive backend
+dvc-s3>=3.0                  # S3/Yandex Object Storage backend
+dvc-gdrive>=3.0              # Google Drive backend (optional)
 
 # ===== Experiment Tracking =====
 mlflow>=2.10.0

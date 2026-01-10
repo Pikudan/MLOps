@@ -152,3 +152,10 @@ experiments/
 prometheus_data/
 grafana_data/
 
+
+# Google Service Account credentials
+credentials/
+*.json
+!training/models/**/config.json
+torchserve/model-store/*.mar
+torchserve/model.pt
