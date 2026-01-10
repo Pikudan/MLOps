@@ -94,7 +94,7 @@ jobs:
 
       - name: Docker build (offline inference)
         run: |
-          docker build -t tomato-inference:ci --target builder . || docker build -t tomato-inference:ci .
+          docker build -t tomato-inference:ci .
         continue-on-error: true
 
       # ===== Predict.py =====
