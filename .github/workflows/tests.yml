@@ -47,7 +47,7 @@ jobs:
       - name: Install MLOps dependencies
         run: |
           pip install --upgrade pip
-          pip install dvc dvc-s3 dvc-gdrive mlflow pandas pillow pyyaml
+          pip install dvc dvc-s3 mlflow pandas pillow pyyaml
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install torchserve torch-model-archiver
 
