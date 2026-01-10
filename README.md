@@ -312,6 +312,116 @@ FROM python:3.10-slim
 
 ---
 
+## 🚀 TorchServe: Онлайн REST API
+
+Docker-контейнер с TorchServe для онлайн-инференса через REST API.
+
+### Структура
+
+```
+torchserve/
+├── handler.py         # Кастомный обработчик (пред/постобработка)
+├── export_model.py    # Экспорт модели в TorchScript
+├── build_mar.sh       # Скрипт сборки MAR архива
+├── config.properties  # Конфигурация TorchServe
+├── Dockerfile         # Docker образ на базе pytorch/torchserve
+└── model-store/       # Директория для MAR файлов
+    └── tomato-disease.mar
+```
+
+### Сборка MAR архива
+
+```bash
+# 1. Экспорт модели в TorchScript
+python torchserve/export_model.py \
+    --model-dir training/models/tomato \
+    --output torchserve/model.pt
+
+# 2. Создание MAR архива
+torch-model-archiver \
+    --model-name tomato-disease \
+    --version 1.0 \
+    --serialized-file torchserve/model.pt \
+    --handler torchserve/handler.py \
+    --export-path torchserve/model-store
+
+# Или использовать готовый скрипт:
+./torchserve/build_mar.sh
+```
+
+### Сборка и запуск Docker-контейнера
+
+```bash
+# Сборка образа
+docker build -t mymodel-serve:v1 -f torchserve/Dockerfile .
+
+# Запуск контейнера
+docker run -d \
+    --name torchserve \
+    -p 8080:8080 \
+    -p 8081:8081 \
+    -p 8082:8082 \
+    mymodel-serve:v1
+
+# Проверка статуса
+docker logs torchserve
+curl http://localhost:8080/ping
+```
+
+### REST API Endpoints
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/ping` | GET | Health check |
+| `/predictions/tomato-disease` | POST | Инференс изображения |
+| `/models` | GET | Список загруженных моделей |
+| `/models/tomato-disease` | GET | Информация о модели |
+
+### Примеры запросов
+
+```bash
+# Health check
+curl http://localhost:8080/ping
+# Response: {"status": "Healthy"}
+
+# Инференс изображения (бинарные данные)
+curl -X POST http://localhost:8080/predictions/tomato-disease \
+    -T sample_image.jpg
+
+# Инференс с указанием Content-Type
+curl -X POST http://localhost:8080/predictions/tomato-disease \
+    -H "Content-Type: image/jpeg" \
+    --data-binary @sample_image.jpg
+```
+
+### Формат ответа
+
+```json
+{
+    "predicted_class": "late_blight",
+    "confidence": 0.9234,
+    "top_predictions": [
+        {"class": "late_blight", "probability": 0.9234},
+        {"class": "early_blight", "probability": 0.0521},
+        {"class": "healthy", "probability": 0.0143}
+    ]
+}
+```
+
+### Конфигурация сервиса
+
+Файл `torchserve/config.properties`:
+
+| Параметр | Значение | Описание |
+|----------|----------|----------|
+| `inference_address` | `0.0.0.0:8080` | Порт для инференса |
+| `management_address` | `0.0.0.0:8081` | Порт для управления |
+| `metrics_address` | `0.0.0.0:8082` | Порт для метрик |
+| `default_workers_per_model` | 1 | Количество воркеров |
+| `job_queue_size` | 100 | Размер очереди запросов |
+
+---
+
 ## Набор данных
 
 ### 1. Детекция растений (Object Detection & Segmentation)
