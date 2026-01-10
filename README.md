@@ -102,12 +102,12 @@
 
 ### Где лежат данные/модели
 
-| Тип | Путь | Описание |
-|-----|------|----------|
-| **Датасет** | `training/classification/datasets/tomato/` | 6436 изображений болезней томатов |
-| **Модели** | `training/models/tomato/` | Обученные веса SimpleCNN |
-| **DVC файлы** | `*.dvc` | Ссылки на версионированные данные |
-| **Remote** | Yandex Object Storage | `s3://dvc-storage-tlm` |
+| Тип | Путь | Описание | Версионирование |
+|-----|------|----------|-----------------|
+| **Датасет** | `training/classification/datasets/tomato/` | 6436 изображений болезней томатов | `training/classification/datasets/tomato.dvc` |
+| **Модели** | `training/models/tomato/` | Обученные веса SimpleCNN | Output стадии `train` в `dvc.yaml` |
+| **DVC файлы** | `*.dvc` | Ссылки на версионированные данные | В Git |
+| **Remote** | Yandex Object Storage | `s3://dvc-storage-tlm` | Конфигурация в `.dvc/config` |
 
 ### Быстрый старт
 
@@ -172,14 +172,21 @@ dvc push  # Сохранит в /tmp/dvc-storage
 ### Переключение версий
 
 ```bash
-# Переключиться на предыдущую версию данных
+# Переключиться на предыдущую версию данных и модели
 git checkout HEAD~1
 dvc checkout
 
 # Вернуться к актуальной версии
 git checkout main
 dvc checkout
+
+# Воспроизвести пайплайн для конкретной версии
+git checkout <commit-hash>
+dvc checkout
+dvc repro  # Пересоздаст все outputs согласно dvc.yaml
 ```
+
+**Важно:** При переключении версий DVC автоматически восстанавливает соответствующую версию данных и модели из remote storage.
 
 ---
 
@@ -198,13 +205,31 @@ dvc checkout
 
 ### Просмотр результатов
 
+#### Локальный MLflow UI
+
 ```bash
-# Запуск MLflow UI
+# Запуск MLflow UI (локальное хранилище)
 cd MLOps
 mlflow ui --port 5000
 
 # Откройте http://localhost:5000
 ```
+
+#### Подключение к удалённому MLflow серверу
+
+```bash
+# Установка переменной окружения для удалённого сервера
+export MLFLOW_TRACKING_URI=http://mlflow-server:5000
+# или
+export MLFLOW_TRACKING_URI=postgresql://user:pass@host:5432/mlflowdb
+
+# Запуск обучения (логи будут отправляться на удалённый сервер)
+python -m training.classification.train training/classification/configs/tomato.yaml
+```
+
+**Где смотреть результаты:**
+- Локально: `mlruns/` директория в корне проекта
+- Удалённо: UI доступен по адресу `MLFLOW_TRACKING_URI`
 
 ### Запуск обучения с MLflow
 
@@ -320,14 +345,33 @@ docker run \
     --output_path /data/preds.csv
 ```
 
+### Что делает скрипт predict.py
+
+Скрипт `src/predict.py` выполняет офлайн-инференс модели классификации болезней томатов:
+
+1. **Загружает модель** из `training/models/tomato/` (PyTorch state_dict)
+2. **Читает изображения** из `--input_path` (файл или директория)
+3. **Применяет предобработку**: resize до 224x224, нормализация ImageNet
+4. **Выполняет предсказания** через модель
+5. **Сохраняет результаты** в CSV с колонками: `filename`, `predicted_class`, `confidence`, `class_index`
+
+**Поддерживаемые форматы:**
+- Вход: JPG, JPEG, PNG (RGB изображения)
+- Выход: CSV файл с предсказаниями
+
 ### Dockerfile структура
 
 ```dockerfile
 FROM python:3.10-slim
-# CPU-only PyTorch для меньшего размера образа
+# Установка системных зависимостей (gcc, libglib2.0-0)
+# Установка Python зависимостей из requirements-mlops.txt
+# CPU-only PyTorch для меньшего размера образа (< 1 GB)
 # Копирует src/predict.py и training/classification/src/
+# Копирует модель training/models/tomato/
 # ENTRYPOINT: python -m src.predict
 ```
+
+**Примечание:** Модель копируется в образ при сборке. Для использования актуальной версии можно выполнить `dvc pull` внутри контейнера или использовать volume mount.
 
 ---
 
@@ -396,21 +440,51 @@ curl http://localhost:8080/ping
 | `/models` | GET | Список загруженных моделей |
 | `/models/tomato-disease` | GET | Информация о модели |
 
-### Примеры запросов
+### Примеры REST-запросов
+
+#### Health Check
 
 ```bash
-# Health check
 curl http://localhost:8080/ping
 # Response: {"status": "Healthy"}
+```
 
-# Инференс изображения (бинарные данные)
+#### Инференс изображения
+
+```bash
+# Простой запрос (бинарные данные)
 curl -X POST http://localhost:8080/predictions/tomato-disease \
     -T sample_image.jpg
 
-# Инференс с указанием Content-Type
+# С указанием Content-Type
 curl -X POST http://localhost:8080/predictions/tomato-disease \
     -H "Content-Type: image/jpeg" \
     --data-binary @sample_image.jpg
+
+# Используя Python requests
+python -c "
+import requests
+with open('sample_image.jpg', 'rb') as f:
+    response = requests.post(
+        'http://localhost:8080/predictions/tomato-disease',
+        data=f,
+        headers={'Content-Type': 'image/jpeg'}
+    )
+print(response.json())
+"
+```
+
+#### Управление моделями
+
+```bash
+# Список всех моделей
+curl http://localhost:8081/models
+
+# Информация о конкретной модели
+curl http://localhost:8081/models/tomato-disease
+
+# Загрузка новой версии модели
+curl -X POST http://localhost:8081/models?url=file:///path/to/model.mar
 ```
 
 ### Формат ответа
@@ -429,15 +503,26 @@ curl -X POST http://localhost:8080/predictions/tomato-disease \
 
 ### Конфигурация сервиса
 
-Файл `torchserve/config.properties`:
+Файл `torchserve/config.properties` содержит параметры конфигурации TorchServe:
 
 | Параметр | Значение | Описание |
 |----------|----------|----------|
-| `inference_address` | `0.0.0.0:8080` | Порт для инференса |
-| `management_address` | `0.0.0.0:8081` | Порт для управления |
-| `metrics_address` | `0.0.0.0:8082` | Порт для метрик |
-| `default_workers_per_model` | 1 | Количество воркеров |
-| `job_queue_size` | 100 | Размер очереди запросов |
+| `inference_address` | `http://127.0.0.1:8080` | Порт для REST API инференса |
+| `management_address` | `http://127.0.0.1:8081` | Порт для управления моделями |
+| `metrics_address` | `http://127.0.0.1:8082` | Порт для метрик Prometheus |
+| `grpc_inference_port` | `17070` | Порт для gRPC инференса |
+| `grpc_management_port` | `17071` | Порт для gRPC управления |
+| `default_workers_per_model` | `1` | Количество воркеров на модель |
+| `job_queue_size` | `10` | Размер очереди запросов |
+| `disable_token_authorization` | `true` | Отключение авторизации (для разработки) |
+| `enable_metrics_api` | `true` | Включение API метрик |
+
+**Изменение конфигурации:**
+```bash
+# Отредактировать torchserve/config.properties
+# Перезапустить контейнер
+docker restart torchserve
+```
 
 ---
 
