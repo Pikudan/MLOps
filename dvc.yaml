@@ -19,6 +19,7 @@ stages:
       training/classification/configs/tomato.yaml
       --epochs 5
       --batch-size 32
+      --experiment-name tomato-disease-classification
     deps:
       - training/classification/datasets/tomato
       - training/classification/src/

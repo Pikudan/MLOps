@@ -1,4 +1,4 @@
-"""Training loop utilities."""
+"""Training loop utilities with MLflow integration."""
 
 from __future__ import annotations
 
@@ -10,6 +10,12 @@ from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
+
+try:
+    import mlflow
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
 
 from .config import OptimConfig
 from .validation import validate_batch
@@ -102,6 +108,13 @@ class Trainer:
 
             LOGGER.info("Train metrics: %s", train_metrics)
             LOGGER.info("Validation metrics: %s", val_metrics)
+            
+            # Log metrics to MLflow
+            if MLFLOW_AVAILABLE and mlflow.active_run():
+                for key, value in train_metrics.items():
+                    mlflow.log_metric(key, value, step=epoch)
+                for key, value in val_metrics.items():
+                    mlflow.log_metric(key, value, step=epoch)
 
             if val_metrics.get("val_accuracy", 0.0) >= best_accuracy:
                 best_accuracy = val_metrics.get("val_accuracy", 0.0)

@@ -166,14 +166,69 @@ dvc checkout
 
 ## 📊 MLflow: Трекинг экспериментов
 
-*(Раздел будет дополнен после интеграции MLflow)*
+Проект интегрирован с [MLflow](https://mlflow.org/) для отслеживания экспериментов.
+
+### Что логируется
+
+| Тип | Данные |
+|-----|--------|
+| **Параметры** | seed, learning_rate, batch_size, epochs, hidden_dim, dropout, ... |
+| **Метрики** | train_loss, train_accuracy, val_loss, val_accuracy (на каждой эпохе) |
+| **Артефакты** | model (PyTorch), config.yaml, dvc.lock |
+| **Теги** | dvc_data_hash, git_commit |
 
 ### Просмотр результатов
 
 ```bash
 # Запуск MLflow UI
+cd MLOps
 mlflow ui --port 5000
+
 # Откройте http://localhost:5000
+```
+
+### Запуск обучения с MLflow
+
+```bash
+# Стандартный запуск (логи в локальную папку mlruns/)
+python -m training.classification.train training/classification/configs/tomato.yaml
+
+# С указанием имени эксперимента
+python -m training.classification.train training/classification/configs/tomato.yaml \
+    --experiment-name my-experiment \
+    --run-name run-001
+
+# С удалённым MLflow сервером
+export MLFLOW_TRACKING_URI=http://mlflow-server:5000
+python -m training.classification.train training/classification/configs/tomato.yaml
+```
+
+### Структура MLflow
+
+```
+mlruns/
+└── <experiment_id>/
+    └── <run_id>/
+        ├── artifacts/
+        │   ├── model/           # PyTorch модель
+        │   ├── config/          # Конфиг обучения
+        │   └── dvc/             # dvc.lock для воспроизводимости
+        ├── metrics/             # Метрики по эпохам
+        ├── params/              # Гиперпараметры
+        └── tags/                # dvc_data_hash, git_commit
+```
+
+### Связь DVC и MLflow
+
+При каждом запуске обучения автоматически логируется:
+- `dvc_data_hash` — хеш версии данных из DVC
+- `dvc.lock` — файл для воспроизведения точной версии данных
+
+Это позволяет восстановить точную версию данных для любого эксперимента:
+```bash
+# Найти dvc.lock в артефактах MLflow run
+# Скопировать его в проект и выполнить:
+dvc checkout
 ```
 
 ---
