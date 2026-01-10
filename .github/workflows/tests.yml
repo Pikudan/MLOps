@@ -140,7 +140,6 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     needs: [tests, mlops]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
       - uses: actions/checkout@v4
