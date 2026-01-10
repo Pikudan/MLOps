@@ -233,9 +233,82 @@ dvc checkout
 
 ---
 
-## 🐳 Docker: Инференс
+## 🐳 Docker: Офлайн-инференс
 
-*(Раздел будет дополнен после создания Docker-образа)*
+Docker-образ для офлайн-инференса модели классификации болезней томатов.
+
+### Сборка образа
+
+```bash
+# Сборка образа
+docker build -t ml-app:v1 .
+
+# Проверка размера (должен быть < 1 GB)
+docker images ml-app:v1
+```
+
+### Запуск инференса
+
+```bash
+# Создать директории для данных
+mkdir -p data/input data/output
+
+# Скопировать изображения в data/input
+cp path/to/your/images/*.jpg data/input/
+
+# Запуск контейнера
+docker run -v $(pwd)/data:/data ml-app:v1 \
+    --input_path /data/input \
+    --output_path /data/output/preds.csv
+
+# Просмотр результатов
+cat data/output/preds.csv
+```
+
+### Параметры скрипта predict.py
+
+| Параметр | Описание | По умолчанию |
+|----------|----------|--------------|
+| `--input_path` | Путь к изображению или директории | (обязательный) |
+| `--output_path` | Путь к выходному CSV файлу | (обязательный) |
+| `--model_dir` | Путь к директории с моделью | `training/models/tomato` |
+| `--image_size` | Размер изображения для предобработки | 224 |
+| `--batch_size` | Размер батча для инференса | 32 |
+| `--device` | Устройство (cpu/cuda) | cpu |
+
+### Формат входных/выходных данных
+
+**Вход:** 
+- Одиночное изображение (JPG, PNG)
+- Директория с изображениями
+
+**Выход (CSV):**
+```csv
+filename,predicted_class,confidence,class_index
+image1.jpg,healthy,0.9542,2
+image2.jpg,late_blight,0.8721,3
+```
+
+### Пример с volume mapping
+
+```bash
+# С моделью извне контейнера
+docker run \
+    -v $(pwd)/data:/data \
+    -v $(pwd)/custom_model:/app/training/models/tomato \
+    ml-app:v1 \
+    --input_path /data/input \
+    --output_path /data/preds.csv
+```
+
+### Dockerfile структура
+
+```dockerfile
+FROM python:3.10-slim
+# CPU-only PyTorch для меньшего размера образа
+# Копирует src/predict.py и training/classification/src/
+# ENTRYPOINT: python -m src.predict
+```
 
 ---
 
