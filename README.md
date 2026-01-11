@@ -18,7 +18,7 @@ python3 -m venv tlm
 source tlm/bin/activate
 pip install -r requirements-mlops.txt
 
-# Публичные ключи для чтения (role: viewer)
+# Публичные ключи для чтения
 dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
 dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
 
@@ -104,7 +104,7 @@ python training/classification/scripts/test_inference.py \
 | **Precision** | ≥ 0.7 | ≥ 0.7 | ≥ 0.5 |
 | **Recall** | ≥ 0.7 | ≥ 0.7 | ≥ 0.5 |
 
-#### Классификация болезней томатов (SimpleCNN)
+#### Классификация болезней томатов (CNN)
 | Метрика | Текущий результат | Целевое значение | Критическое значение |
 |---------|-------------------|------------------|---------------------|
 | **Accuracy** | **0.7917** (79.17%) | ≥ 0.9 | ≥ 0.7 ✅ |
@@ -165,16 +165,7 @@ dvc pull training/models/tomato_large.dvc
 dvc repro
 ```
 
-**Получение ключей доступа:**
-1. Перейдите в [Yandex Cloud Console](https://console.cloud.yandex.ru/)
-2. Object Storage → выберите bucket `dvc-storage-tlm`
-3. Service Accounts → создайте или используйте существующий
-4. Создайте статический ключ доступа
-5. Скопируйте `Access Key ID` и `Secret Access Key`
-
 ### Получение конкретных моделей
-
-**Перед выполнением команд ниже убедитесь, что настроены credentials (см. раздел выше):**
 
 ```bash
 # Получить только датасет
@@ -186,19 +177,6 @@ dvc pull training/models/tomato_large.dvc
 # Получить все версионированные данные
 dvc pull
 ```
-
-**Если возникает ошибка "unable location credentials":**
-1. Настройте credentials (публичные ключи для чтения см. в `DVC_CREDENTIALS.md`):
-   ```bash
-   dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
-   dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
-   ```
-2. Или используйте переменные окружения (см. `DVC_CREDENTIALS.md` для значений):
-   ```bash
-   export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
-   export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
-   ```
-3. Подробнее см. раздел [Настройка credentials](#настройка-credentials-для-доступа) или файл `DVC_CREDENTIALS.md`
 
 ### DVC Пайплайн
 
@@ -228,63 +206,6 @@ dvc pull
 # endpointurl = https://storage.yandexcloud.net
 # region = ru-central1
 ```
-
-#### Настройка credentials для доступа
-
-**⚠️ ВАЖНО: Для работы `dvc pull` нужны ключи доступа!**
-
-Если при выполнении `dvc pull` возникает ошибка "unable location credentials", необходимо настроить ключи доступа:
-
-**Публичные ключи для чтения:**
-
-Публичные ключи доступа (role: viewer, только чтение) доступны в файле `DVC_CREDENTIALS.md` или можно получить свои ключи в Yandex Cloud Console.
-
-```bash
-# Настройка ключей доступа (см. DVC_CREDENTIALS.md для публичных ключей)
-dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
-dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
-
-# Проверка конфигурации
-cat .dvc/config.local
-```
-
-**Примечание:** Публичные ключи имеют роль `viewer` (только чтение) и подходят для `dvc pull`. Для `dvc push` нужны собственные ключи с правами на запись.
-
-**Получение ключей доступа:**
-
-1. Войдите в [Yandex Cloud Console](https://console.cloud.yandex.ru/)
-2. Перейдите в **Object Storage** → выберите bucket `dvc-storage-tlm`
-3. Перейдите в **Service Accounts**
-4. Создайте новый Service Account или используйте существующий
-5. Создайте **Static Access Key**
-6. Скопируйте:
-   - **Access Key ID**
-   - **Secret Access Key**
-
-**Альтернатива: переменные окружения**
-
-```bash
-# Установить переменные окружения (публичные ключи см. в DVC_CREDENTIALS.md)
-export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
-export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
-```
-
-**После настройки credentials:**
-
-```bash
-# Скачивание данных
-dvc pull
-
-# Загрузка данных (требует права на запись)
-dvc push
-```
-
-**Важно:**
-- **`.dvc/config.local`** — файл с ключами, **НЕ коммитится** в Git (уже в `.gitignore`)
-- Для `dvc pull` нужны ключи с правами на чтение
-- Для `dvc push` нужны ключи с правами на запись
-- Подробные инструкции см. в файле `DVC_CREDENTIALS.md`
-
 
 ### Альтернатива: Локальное хранилище
 
@@ -364,18 +285,6 @@ mlflow ui --port 5000
 # Откройте http://localhost:5000
 ```
 
-#### Подключение к удалённому MLflow серверу
-
-```bash
-# Установка переменной окружения для удалённого сервера
-export MLFLOW_TRACKING_URI=http://mlflow-server:5000
-# или
-export MLFLOW_TRACKING_URI=postgresql://user:pass@host:5432/mlflowdb
-
-# Запуск обучения (логи будут отправляться на удалённый сервер)
-python -m training.classification.train training/classification/configs/tomato.yaml
-```
-
 **Где смотреть результаты:**
 - Локально: `mlruns/` директория в корне проекта
 - Удалённо: UI доступен по адресу `MLFLOW_TRACKING_URI`
@@ -442,12 +351,10 @@ dvc pull training/models/tomato_large.dvc
 dvc pull
 ```
 
-**Важно:** Модель не копируется в Docker-образ для уменьшения размера. Она монтируется через volume при запуске контейнера.
-
 ### Сборка образа
 
 ```bash
-# Сборка образа (модель не включается в образ)
+# Сборка образа
 docker build -t ml-app:v1 .
 
 # Проверка размера (должен быть < 1 GB)
@@ -460,8 +367,12 @@ docker images ml-app:v1
 # Создать директории для данных
 mkdir -p data/input data/output
 
-# Скопировать изображения в data/input
-cp path/to/your/images/*.jpg data/input/
+# Скопировать изображения в data/input (пример: изображения томатов из тестового датасета)
+# Внимание: изображения имеют расширение .JPG (заглавные буквы)
+cp training/classification/datasets/tomato/test/late_blight/*.JPG data/input/
+# Или скопировать несколько изображений разных классов:
+# cp training/classification/datasets/tomato/test/healthy/*.JPG data/input/
+# cp training/classification/datasets/tomato/test/early_blight/*.JPG data/input/
 
 # Запуск контейнера с монтированием модели
 docker run \
@@ -540,21 +451,6 @@ docker run \
 - Вход: JPG, JPEG, PNG (RGB изображения)
 - Выход: CSV файл с предсказаниями
 
-### Dockerfile структура
-
-```dockerfile
-FROM python:3.10-slim
-# Установка системных зависимостей (gcc, libglib2.0-0)
-# Установка Python зависимостей из requirements-mlops.txt
-# CPU-only PyTorch для меньшего размера образа (< 1 GB)
-# Копирует src/predict.py и training/classification/src/
-# Копирует модель training/models/tomato/
-# ENTRYPOINT: python -m src.predict
-```
-
-**Примечание:** Модель копируется в образ при сборке. Для использования актуальной версии можно выполнить `dvc pull` внутри контейнера или использовать volume mount.
-
----
 
 ## 🚀 TorchServe: Онлайн REST API
 

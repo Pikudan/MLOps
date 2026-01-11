@@ -1,5 +1,4 @@
 # DVC Pipeline Configuration
-# Run: dvc repro
 
 stages:
   prepare:
@@ -16,20 +15,20 @@ stages:
   train:
     cmd: >
       python -m training.classification.train
-      training/classification/configs/tomato.yaml
-      --epochs 5
-      --batch-size 32
+      training/classification/configs/multiclass/model_large.yaml
+      --epochs 10
+      --batch-size 16
       --experiment-name tomato-disease-classification
     deps:
       - training/classification/datasets/tomato
       - training/classification/src/
-      - training/classification/configs/tomato.yaml
+      - training/classification/configs/multiclass/model_large.yaml
       - training/classification/outputs/data_summary.json
     outs:
-      - training/models/tomato/:
+      - training/models/tomato_large/:
           persist: true
     params:
-      - training/classification/configs/tomato.yaml:
+      - training/classification/configs/multiclass/model_large.yaml:
           - seed
           - model
           - optim
@@ -37,12 +36,12 @@ stages:
   evaluate:
     cmd: >
       python training/classification/scripts/evaluate.py
-      --model-dir training/models/tomato
+      --model-dir training/models/tomato_large
       --test-dir training/classification/datasets/tomato/test
       --output training/classification/outputs/metrics.json
       --image-size 224
     deps:
-      - training/models/tomato/
+      - training/models/tomato_large/
       - training/classification/datasets/tomato/test
       - training/classification/scripts/evaluate.py
     metrics:

@@ -1,0 +1,87 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: "python training/classification/scripts/prepare.py --data-dir training/classification/datasets/tomato
+      --output training/classification/outputs/data_summary.json\n"
+    deps:
+    - path: training/classification/datasets/tomato
+      hash: md5
+      md5: 673e36c64f9b1b45092b6846025291f9.dir
+      size: 101952830
+      nfiles: 6436
+    - path: training/classification/scripts/prepare.py
+      hash: md5
+      md5: 4edd06456aaccc63a3ff16c197ff5a33
+      size: 2773
+    outs:
+    - path: training/classification/outputs/data_summary.json
+      hash: md5
+      md5: d656e8e3f088c0231e0bf758019459e3
+      size: 1692
+  train:
+    cmd: "python -m training.classification.train training/classification/configs/multiclass/model_large.yaml
+      --epochs 10 --batch-size 16 --experiment-name tomato-disease-classification\n"
+    deps:
+    - path: training/classification/configs/multiclass/model_large.yaml
+      hash: md5
+      md5: add72ba680efd85b930a60026b750609
+      size: 703
+    - path: training/classification/datasets/tomato
+      hash: md5
+      md5: 673e36c64f9b1b45092b6846025291f9.dir
+      size: 101952830
+      nfiles: 6436
+    - path: training/classification/outputs/data_summary.json
+      hash: md5
+      md5: d656e8e3f088c0231e0bf758019459e3
+      size: 1692
+    - path: training/classification/src/
+      hash: md5
+      md5: ac968ee6d746ec9b3d7bfd2d03bb019d.dir
+      size: 56720
+      nfiles: 14
+    params:
+      training/classification/configs/multiclass/model_large.yaml:
+        model:
+          architecture: simple_cnn
+          in_channels: 3
+          hidden_dim: 128
+          num_classes: 10
+          dropout: 0.4
+        optim:
+          learning_rate: 0.0003
+          weight_decay: 0.0001
+          epochs: 10
+          batch_size: 16
+          device: cpu
+        seed: 42
+    outs:
+    - path: training/models/tomato_large/
+      hash: md5
+      md5: dc14effa8c355abe3fcbac3179286cc8.dir
+      size: 1217705
+      nfiles: 2
+  evaluate:
+    cmd: "python training/classification/scripts/evaluate.py --model-dir training/models/tomato_large
+      --test-dir training/classification/datasets/tomato/test --output training/classification/outputs/metrics.json
+      --image-size 224\n"
+    deps:
+    - path: training/classification/datasets/tomato/test
+      hash: md5
+      md5: e149aab7532f1fe944b90938430a8aa3.dir
+      size: 56883085
+      nfiles: 3582
+    - path: training/classification/scripts/evaluate.py
+      hash: md5
+      md5: 2958b17b3fabed05680ee7dc7786f908
+      size: 5285
+    - path: training/models/tomato_large/
+      hash: md5
+      md5: dc14effa8c355abe3fcbac3179286cc8.dir
+      size: 1217705
+      nfiles: 2
+    outs:
+    - path: training/classification/outputs/metrics.json
+      hash: md5
+      md5: 060b67392706ea3e2d30bd4e495b1465
+      size: 3309
