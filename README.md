@@ -8,6 +8,23 @@
 - [Docker: Офлайн-инференс](#-docker-офлайн-инференс)
 - [TorchServe: Онлайн REST API](#-torchserve-онлайн-rest-api)
 
+### Быстрый старт с лучшей моделью
+```bash
+# Клонирование и установка
+git clone https://github.com/Pikudan/MLOps.git
+cd MLOps
+pip install -r requirements-mlops.txt
+
+# Получение лучшей модели через DVC
+dvc pull training/models/tomato_large.dvc
+
+# Тестирование модели
+python training/classification/scripts/test_inference.py \
+    --model-dir training/models/tomato_large \
+    --test-dir training/classification/datasets/tomato/test \
+    --output outputs/test_predictions.csv
+```
+
 ### Проект
 - [Бизнес-цель проекта](#-бизнес-цель-проекта)
 - [Целевые метрики для продакшена](#-целевые-метрики-для-продакшена)
@@ -109,7 +126,8 @@
 | Тип | Путь | Описание | Версионирование |
 |-----|------|----------|-----------------|
 | **Датасет** | `training/classification/datasets/tomato/` | 6436 изображений болезней томатов | `training/classification/datasets/tomato.dvc` |
-| **Модели** | `training/models/tomato/` | Обученные веса SimpleCNN | Output стадии `train` в `dvc.yaml` |
+| **Модели (baseline)** | `training/models/tomato/` | Обученные веса SimpleCNN | Output стадии `train` в `dvc.yaml` |
+| **Лучшая модель** | `training/models/tomato_large/` | Best model (simple_cnn_large, 79.17% accuracy) | `training/models/tomato_large.dvc` |
 | **DVC файлы** | `*.dvc` | Ссылки на версионированные данные | В Git |
 | **Remote** | Yandex Object Storage | `s3://dvc-storage-tlm` | Конфигурация в `.dvc/config` |
 
@@ -124,8 +142,24 @@ pip install -r requirements-mlops.txt
 # Скачивание данных из DVC storage
 dvc pull
 
+# Получение лучшей модели для тестирования
+dvc pull training/models/tomato_large.dvc
+
 # Воспроизведение полного пайплайна
 dvc repro
+```
+
+### Получение конкретных моделей
+
+```bash
+# Получить только датасет
+dvc pull training/classification/datasets/tomato.dvc
+
+# Получить только лучшую модель (для тестирования)
+dvc pull training/models/tomato_large.dvc
+
+# Получить все версионированные данные
+dvc pull
 ```
 
 ### DVC Пайплайн
@@ -172,6 +206,30 @@ dvc push
 dvc remote default local_storage
 dvc push  # Сохранит в /tmp/dvc-storage
 ```
+
+### Версионирование моделей
+
+Лучшая модель (`tomato_large`) версионируется через DVC:
+
+```bash
+# Просмотр информации о модели
+cat training/models/tomato_large.dvc
+
+# Получение модели (если отсутствует)
+dvc pull training/models/tomato_large.dvc
+
+# Проверка статуса модели
+dvc status training/models/tomato_large.dvc
+
+# Обновление модели в remote storage (требует ключи доступа)
+dvc push training/models/tomato_large.dvc
+```
+
+**Характеристики лучшей модели:**
+- **Архитектура**: SimpleCNN (hidden_dim=128, dropout=0.4)
+- **Размер**: 1.2 MB
+- **Test Accuracy**: 79.17%
+- **DVC хеш**: `e9c66c4eda006a2459cb576ccb0036b2`
 
 ### Переключение версий
 
@@ -285,6 +343,18 @@ dvc checkout
 
 Docker-образ для офлайн-инференса модели классификации болезней томатов.
 
+### Подготовка модели
+
+Перед сборкой Docker-образа убедитесь, что модель загружена через DVC:
+
+```bash
+# Получить лучшую модель из DVC storage
+dvc pull training/models/tomato_large.dvc
+
+# Или получить все данные
+dvc pull
+```
+
 ### Сборка образа
 
 ```bash
@@ -323,6 +393,16 @@ cat data/output/preds.csv
 | `--image_size` | Размер изображения для предобработки | 224 |
 | `--batch_size` | Размер батча для инференса | 32 |
 | `--device` | Устройство (cpu/cuda) | cpu |
+
+**Использование лучшей модели:**
+
+```bash
+# Использовать лучшую модель (tomato_large) для инференса
+docker run -v $(pwd)/data:/data ml-app:v1 \
+    --input_path /data/input \
+    --output_path /data/output/preds.csv \
+    --model_dir training/models/tomato_large
+```
 
 ### Формат входных/выходных данных
 
@@ -951,7 +1031,24 @@ python training/classification/scripts/train_multiple_models.py
 
 ### Тестирование лучшей модели на тестовом датасете
 
-После обучения нескольких моделей, лучшая модель (по метрикам валидации) сохранена в `training/models/tomato_large/`.
+После обучения нескольких моделей, лучшая модель (по метрикам валидации) сохранена в `training/models/tomato_large/` и версионируется через DVC.
+
+#### Получение модели через DVC
+
+Если модель отсутствует локально (например, после клонирования репозитория):
+
+```bash
+# Получить лучшую модель из DVC storage
+dvc pull training/models/tomato_large.dvc
+
+# Проверить, что модель загружена
+ls -lh training/models/tomato_large/
+# Должны быть файлы:
+# - config.json
+# - pytorch_model.bin (1.2 MB)
+```
+
+Модель автоматически загрузится из Yandex Object Storage при выполнении `dvc pull`.
 
 #### Оценка модели (метрики)
 
