@@ -8,8 +8,12 @@
 
 ### Способ 1: Через DVC config (рекомендуется)
 
+**Публичные ключи для чтения (role: viewer):**
+
+Для получения публичных ключей доступа (role: viewer, только чтение) обратитесь к владельцу репозитория или настройте свои ключи в Yandex Cloud Console.
+
 ```bash
-# Настройка ключей доступа (сохраняются локально, не коммитятся)
+# Настройка ключей доступа (замените на реальные ключи)
 dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
 dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
 
@@ -17,9 +21,12 @@ dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KE
 cat .dvc/config.local
 ```
 
+**Примечание:** Ключи с ролью `viewer` (только чтение) подходят для `dvc pull`. Для `dvc push` нужны ключи с правами на запись.
+
 ### Способ 2: Через переменные окружения
 
 ```bash
+# Установить переменные окружения (замените на реальные ключи)
 export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
 
@@ -27,6 +34,8 @@ export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
 export YC_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
 export YC_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
 ```
+
+**Публичные ключи для чтения:** Обратитесь к владельцу репозитория для получения публичных ключей (role: viewer) или создайте свои в Yandex Cloud Console.
 
 ## Получение ключей доступа
 

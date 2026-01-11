@@ -18,6 +18,7 @@ python3 -m venv tlm
 source tlm/bin/activate
 pip install -r requirements-mlops.txt
 
+# Публичные ключи для чтения (role: viewer)
 dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
 dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
 
@@ -149,6 +150,8 @@ cd MLOps
 pip install -r requirements-mlops.txt
 
 # Настройка credentials для Yandex Object Storage (обязательно!)
+# Публичные ключи для чтения см. в DVC_CREDENTIALS.md
+# Или получите свои ключи в Yandex Cloud Console
 dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
 dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
 
@@ -185,8 +188,16 @@ dvc pull
 ```
 
 **Если возникает ошибка "unable location credentials":**
-1. Настройте credentials: `dvc remote modify --local yandex_storage access_key_id YOUR_KEY`
-2. Или используйте переменные окружения: `export AWS_ACCESS_KEY_ID=YOUR_KEY`
+1. Настройте credentials (публичные ключи для чтения см. в `DVC_CREDENTIALS.md`):
+   ```bash
+   dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
+   dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
+   ```
+2. Или используйте переменные окружения (см. `DVC_CREDENTIALS.md` для значений):
+   ```bash
+   export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
+   export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
+   ```
 3. Подробнее см. раздел [Настройка credentials](#настройка-credentials-для-доступа) или файл `DVC_CREDENTIALS.md`
 
 ### DVC Пайплайн
@@ -224,14 +235,20 @@ dvc pull
 
 Если при выполнении `dvc pull` возникает ошибка "unable location credentials", необходимо настроить ключи доступа:
 
+**Публичные ключи для чтения:**
+
+Публичные ключи доступа (role: viewer, только чтение) доступны в файле `DVC_CREDENTIALS.md` или можно получить свои ключи в Yandex Cloud Console.
+
 ```bash
-# Настройка ключей доступа (сохраняются в .dvc/config.local, не коммитятся)
+# Настройка ключей доступа (см. DVC_CREDENTIALS.md для публичных ключей)
 dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
 dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
 
 # Проверка конфигурации
 cat .dvc/config.local
 ```
+
+**Примечание:** Публичные ключи имеют роль `viewer` (только чтение) и подходят для `dvc pull`. Для `dvc push` нужны собственные ключи с правами на запись.
 
 **Получение ключей доступа:**
 
@@ -247,7 +264,7 @@ cat .dvc/config.local
 **Альтернатива: переменные окружения**
 
 ```bash
-# Установить переменные окружения
+# Установить переменные окружения (публичные ключи см. в DVC_CREDENTIALS.md)
 export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
 ```

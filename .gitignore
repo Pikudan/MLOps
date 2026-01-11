@@ -162,3 +162,4 @@ credentials/
 !training/models/**/config.json
 torchserve/model-store/*.mar
 torchserve/model.pt
+DVC_CREDENTIALS_PRIVATE.md
