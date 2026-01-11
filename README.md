@@ -345,7 +345,7 @@ Docker-образ для офлайн-инференса модели класс
 
 ### Подготовка модели
 
-Перед сборкой Docker-образа убедитесь, что модель загружена через DVC:
+Перед запуском контейнера убедитесь, что модель загружена через DVC:
 
 ```bash
 # Получить лучшую модель из DVC storage
@@ -355,10 +355,12 @@ dvc pull training/models/tomato_large.dvc
 dvc pull
 ```
 
+**Важно:** Модель не копируется в Docker-образ для уменьшения размера. Она монтируется через volume при запуске контейнера.
+
 ### Сборка образа
 
 ```bash
-# Сборка образа
+# Сборка образа (модель не включается в образ)
 docker build -t ml-app:v1 .
 
 # Проверка размера (должен быть < 1 GB)
@@ -374,10 +376,14 @@ mkdir -p data/input data/output
 # Скопировать изображения в data/input
 cp path/to/your/images/*.jpg data/input/
 
-# Запуск контейнера
-docker run -v $(pwd)/data:/data ml-app:v1 \
+# Запуск контейнера с монтированием модели
+docker run \
+    -v $(pwd)/data:/data \
+    -v $(pwd)/training/models:/app/training/models \
+    ml-app:v1 \
     --input_path /data/input \
-    --output_path /data/output/preds.csv
+    --output_path /data/output/preds.csv \
+    --model_dir training/models/tomato_large
 
 # Просмотр результатов
 cat data/output/preds.csv
@@ -398,7 +404,11 @@ cat data/output/preds.csv
 
 ```bash
 # Использовать лучшую модель (tomato_large) для инференса
-docker run -v $(pwd)/data:/data ml-app:v1 \
+# Модель монтируется через volume
+docker run \
+    -v $(pwd)/data:/data \
+    -v $(pwd)/training/models:/app/training/models \
+    ml-app:v1 \
     --input_path /data/input \
     --output_path /data/output/preds.csv \
     --model_dir training/models/tomato_large

@@ -37,9 +37,12 @@ RUN pip install --no-cache-dir \
 COPY src/ ./src/
 COPY training/classification/src/ ./training/classification/src/
 
-# Copy pre-trained model (if available)
-# This can also be done via dvc pull in CI/CD
-COPY training/models/tomato/ ./training/models/tomato/
+# Create model directories structure
+# NOTE: Models are NOT copied during build to keep image size small
+# Models should be:
+# 1. Mounted via volume: -v $(pwd)/training/models:/app/training/models
+# 2. Or obtained via dvc pull before building (if you want models in image)
+RUN mkdir -p ./training/models/tomato ./training/models/tomato_large
 
 # Create data directories
 RUN mkdir -p /data/input /data/output
