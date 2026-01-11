@@ -472,18 +472,25 @@ torchserve/
 ### Сборка MAR архива
 
 ```bash
+# Активировать виртуальное окружение
+source tlm/bin/activate
+
 # 1. Экспорт модели в TorchScript
 python torchserve/export_model.py \
-    --model-dir training/models/tomato \
+    --model-dir training/models/tomato_large \
     --output torchserve/model.pt
 
-# 2. Создание MAR архива
+# 2. Создать директорию для MAR файлов
+mkdir -p torchserve/model-store
+
+# 3. Создание MAR архива (--force для перезаписи)
 torch-model-archiver \
     --model-name tomato-disease \
     --version 1.0 \
     --serialized-file torchserve/model.pt \
     --handler torchserve/handler.py \
-    --export-path torchserve/model-store
+    --export-path torchserve/model-store \
+    --force
 
 # Или использовать готовый скрипт:
 ./torchserve/build_mar.sh
@@ -495,6 +502,9 @@ torch-model-archiver \
 # Сборка образа
 docker build -t mymodel-serve:v1 -f torchserve/Dockerfile .
 
+# Остановить старый контейнер (если есть)
+docker stop torchserve 2>/dev/null && docker rm torchserve 2>/dev/null
+
 # Запуск контейнера
 docker run -d \
     --name torchserve \
@@ -503,8 +513,10 @@ docker run -d \
     -p 8082:8082 \
     mymodel-serve:v1
 
-# Проверка статуса
-docker logs torchserve
+# Проверка логов (дождаться загрузки модели)
+docker logs -f torchserve
+
+# Health check
 curl http://localhost:8080/ping
 ```
 
@@ -529,14 +541,14 @@ curl http://localhost:8080/ping
 #### Инференс изображения
 
 ```bash
-# Простой запрос (бинарные данные)
+# Простой запрос (бинарные данные) - пример с изображением из тестового датасета
 curl -X POST http://localhost:8080/predictions/tomato-disease \
-    -T sample_image.jpg
+    -T training/classification/datasets/tomato/test/late_blight/0016ce67-68e5-42c5-b047-bd6e839f9154.JPG
 
 # С указанием Content-Type
 curl -X POST http://localhost:8080/predictions/tomato-disease \
     -H "Content-Type: image/jpeg" \
-    --data-binary @sample_image.jpg
+    --data-binary @training/classification/datasets/tomato/test/healthy/01217ea7-b8f9-48a3-a7a5-c317385b0439.JPG
 
 # Используя Python requests
 python -c "
@@ -584,15 +596,18 @@ curl -X POST http://localhost:8081/models?url=file:///path/to/model.mar
 
 | Параметр | Значение | Описание |
 |----------|----------|----------|
-| `inference_address` | `http://127.0.0.1:8080` | Порт для REST API инференса |
-| `management_address` | `http://127.0.0.1:8081` | Порт для управления моделями |
-| `metrics_address` | `http://127.0.0.1:8082` | Порт для метрик Prometheus |
+| `inference_address` | `http://0.0.0.0:8080` | Порт для REST API инференса |
+| `management_address` | `http://0.0.0.0:8081` | Порт для управления моделями |
+| `metrics_address` | `http://0.0.0.0:8082` | Порт для метрик Prometheus |
 | `grpc_inference_port` | `17070` | Порт для gRPC инференса |
 | `grpc_management_port` | `17071` | Порт для gRPC управления |
 | `default_workers_per_model` | `1` | Количество воркеров на модель |
 | `job_queue_size` | `10` | Размер очереди запросов |
 | `disable_token_authorization` | `true` | Отключение авторизации (для разработки) |
 | `enable_metrics_api` | `true` | Включение API метрик |
+| `load_models` | `tomato-disease.mar` | Автозагрузка модели при старте |
+
+> **Важно:** Адреса `0.0.0.0` необходимы для доступа к API извне Docker-контейнера.
 
 **Изменение конфигурации:**
 ```bash

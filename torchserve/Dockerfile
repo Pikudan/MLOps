@@ -23,9 +23,8 @@ COPY torchserve/handler.py /home/model-server/handler.py
 # Copy config
 COPY torchserve/config.properties /home/model-server/config.properties
 
-# Copy pre-built MAR file if exists
-# (alternatively, build MAR during container startup)
-COPY torchserve/model-store/*.mar ${MODEL_STORE}/ 2>/dev/null || true
+# Copy pre-built MAR file
+COPY torchserve/model-store/tomato-disease.mar ${MODEL_STORE}/
 
 # Switch back to model-server user
 USER model-server
