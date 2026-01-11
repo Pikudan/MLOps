@@ -22,9 +22,10 @@ from sklearn.metrics import (
 import numpy as np
 
 import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
 
-from model import SimpleCNN
+from training.classification.src.model import SimpleCNN
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 LOGGER = logging.getLogger(__name__)

@@ -1,0 +1,39 @@
+seed: 42
+
+data:
+  dataset: imagefolder
+  train_dir: training/classification/datasets/tomato/train
+  val_dir: training/classification/datasets/tomato/val
+  image_size: 224
+  num_classes: 10
+  num_workers: 0
+  augmentations:
+    horizontal_flip: true
+    rotation: 15
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+model:
+  architecture: simple_cnn
+  in_channels: 3
+  hidden_dim: 128
+  num_classes: 10
+  dropout: 0.4
+
+optim:
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  epochs: 10
+  batch_size: 16
+  device: cpu
+
+logging:
+  level: INFO
+  log_dir: training/logs/classification
+  log_to_file: true
+
+save:
+  output_dir: training/models/tomato_large
+  save_best: true
+

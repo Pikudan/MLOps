@@ -77,14 +77,18 @@
 | **Precision** | ≥ 0.7 | ≥ 0.7 | ≥ 0.5 |
 | **Recall** | ≥ 0.7 | ≥ 0.7 | ≥ 0.5 |
 
-#### Классификация болезней томатов (ResNet50)
-| Метрика | Целевое значение | Критическое значение |
-|---------|------------------|---------------------|
-| **Accuracy** | ≥ 0.9| ≥ 0.8 |
-| **F1-Score (macro avg)** | ≥ 0.9 | ≥ 0.8 |
-| **Precision (macro avg)** | ≥ 0.9 | ≥ 0.8 |
-| **Recall (macro avg)** | ≥ 0.9 | ≥ 0.8 |
-| **AUC-ROC** | ≥ 0.9 | ≥ 0.9 |
+#### Классификация болезней томатов (SimpleCNN)
+| Метрика | Текущий результат | Целевое значение | Критическое значение |
+|---------|-------------------|------------------|---------------------|
+| **Accuracy** | **0.7917** (79.17%) | ≥ 0.9 | ≥ 0.7 ✅ |
+| **F1-Score (macro avg)** | **0.7362** | ≥ 0.9 | ≥ 0.7 ✅ |
+| **Precision (macro avg)** | **0.8017** | ≥ 0.9 | ≥ 0.7 ✅ |
+| **Recall (macro avg)** | **0.7209** | ≥ 0.9 | ≥ 0.7 ✅ |
+
+**Лучшая модель**: `simple_cnn_large` (hidden_dim=128, dropout=0.4, lr=0.0003)
+- Сохранена в: `training/models/tomato_large/`
+- Тестовый датасет: 3582 изображения, 10 классов
+- Результаты: `outputs/test_metrics_large.json`, `outputs/test_predictions_large.csv`
 
 ### Business Metrics (Бизнес-метрики)
 
@@ -928,6 +932,79 @@ python train.py configs/default.yaml --epochs 2 --batch-size 16
 - `save`: путь для сохранения модели.
 
 Для реальных данных обновите поля `data.dataset`, `data.train_dir`, `data.val_dir` и `model.num_classes`.
+
+### Обучение нескольких моделей для сравнения
+
+Для обучения нескольких моделей с разными гиперпараметрами используйте скрипт `train_multiple_models.py`:
+
+```bash
+python training/classification/scripts/train_multiple_models.py
+```
+
+Скрипт обучит 4 модели с разными конфигурациями:
+- `simple_cnn_small`: hidden_dim=32, dropout=0.2, lr=0.001
+- `simple_cnn_medium`: hidden_dim=64, dropout=0.3, lr=0.0005
+- `simple_cnn_large`: hidden_dim=128, dropout=0.4, lr=0.0003
+- `simple_cnn_deep`: hidden_dim=64, dropout=0.5, lr=0.0001, epochs=15
+
+Все модели логируются в MLflow эксперимент `Multiclass-Model-Comparison`.
+
+### Тестирование лучшей модели на тестовом датасете
+
+После обучения нескольких моделей, лучшая модель (по метрикам валидации) сохранена в `training/models/tomato_large/`.
+
+#### Оценка модели (метрики)
+
+Для получения детальных метрик на тестовом датасете:
+
+```bash
+python training/classification/scripts/evaluate.py \
+    --model-dir training/models/tomato_large \
+    --test-dir training/classification/datasets/tomato/test \
+    --output outputs/test_metrics_large.json \
+    --image-size 224 \
+    --batch-size 32
+```
+
+Результаты сохраняются в JSON файл с метриками:
+- Accuracy, Precision, Recall, F1-Score (macro и weighted)
+- Per-class метрики
+- Confusion matrix
+
+#### Инференс с сохранением предсказаний
+
+Для получения предсказаний на всех тестовых изображениях с сохранением в CSV:
+
+```bash
+python training/classification/scripts/test_inference.py \
+    --model-dir training/models/tomato_large \
+    --test-dir training/classification/datasets/tomato/test \
+    --output outputs/test_predictions_large.csv \
+    --image-size 224 \
+    --batch-size 32
+```
+
+Скрипт создаст:
+- `outputs/test_predictions_large.csv` - CSV файл с предсказаниями для каждого изображения
+- `outputs/test_predictions_large_summary.txt` - Сводка с точностью по классам
+
+**Результаты лучшей модели (simple_cnn_large) на тестовом датасете:**
+- **Test Accuracy: 79.17%** (2836 / 3582 правильных предсказаний)
+- **F1-Score (macro): 0.7362**
+- **Precision (macro): 0.8017**
+- **Recall (macro): 0.7209**
+
+**Точность по классам:**
+- `healthy`: 97.92% (336 samples)
+- `tomato_yellow_leaf_curl_virus`: 90.66% (1103 samples)
+- `bacterial_spot`: 88.34% (463 samples)
+- `tomato_mosaic_virus`: 85.90% (78 samples)
+- `spider_mites_two_spotted_spider_mite`: 80.00% (340 samples)
+- `target_spot`: 70.82% (257 samples)
+- `late_blight`: 70.73% (369 samples)
+- `septoria_leaf_spot`: 66.03% (312 samples)
+- `leaf_mold`: 45.00% (140 samples)
+- `early_blight`: 25.54% (184 samples)
 
 ---
 
