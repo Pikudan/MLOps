@@ -8,19 +8,22 @@
 - [Docker: Офлайн-инференс](#-docker-офлайн-инференс)
 - [TorchServe: Онлайн REST API](#-torchserve-онлайн-rest-api)
 
-### Быстрый старт с лучшей моделью
+### Быстрый старт
 ```bash
 # Клонирование и установка
 git clone https://github.com/Pikudan/MLOps.git
 cd MLOps
+git switch second_task
+python3 -m venv tlm
+source tlm/bin/activate
 pip install -r requirements-mlops.txt
 
-# Получение данных и модели через DVC (ключи НЕ нужны для pull)
+dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
+dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
+
+# Получение данных и модели через DVC
 dvc pull training/classification/datasets/tomato.dvc  # Датасет
 dvc pull training/models/tomato_large.dvc            # Лучшая модель
-
-# Или получить все данные одной командой
-# dvc pull
 
 # Тестирование модели
 python training/classification/scripts/test_inference.py \
@@ -28,6 +31,8 @@ python training/classification/scripts/test_inference.py \
     --test-dir training/classification/datasets/tomato/test \
     --output outputs/test_predictions.csv
 ```
+
+**Получение ключей доступа:** См. раздел [Настройка credentials](#настройка-credentials-для-доступа) ниже или файл `DVC_CREDENTIALS.md`
 
 ### Проект
 - [Бизнес-цель проекта](#-бизнес-цель-проекта)
@@ -143,6 +148,10 @@ git clone https://github.com/Pikudan/MLOps.git
 cd MLOps
 pip install -r requirements-mlops.txt
 
+# Настройка credentials для Yandex Object Storage (обязательно!)
+dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
+dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
+
 # Скачивание данных из DVC storage
 dvc pull
 
@@ -153,7 +162,16 @@ dvc pull training/models/tomato_large.dvc
 dvc repro
 ```
 
+**Получение ключей доступа:**
+1. Перейдите в [Yandex Cloud Console](https://console.cloud.yandex.ru/)
+2. Object Storage → выберите bucket `dvc-storage-tlm`
+3. Service Accounts → создайте или используйте существующий
+4. Создайте статический ключ доступа
+5. Скопируйте `Access Key ID` и `Secret Access Key`
+
 ### Получение конкретных моделей
+
+**Перед выполнением команд ниже убедитесь, что настроены credentials (см. раздел выше):**
 
 ```bash
 # Получить только датасет
@@ -165,6 +183,11 @@ dvc pull training/models/tomato_large.dvc
 # Получить все версионированные данные
 dvc pull
 ```
+
+**Если возникает ошибка "unable location credentials":**
+1. Настройте credentials: `dvc remote modify --local yandex_storage access_key_id YOUR_KEY`
+2. Или используйте переменные окружения: `export AWS_ACCESS_KEY_ID=YOUR_KEY`
+3. Подробнее см. раздел [Настройка credentials](#настройка-credentials-для-доступа) или файл `DVC_CREDENTIALS.md`
 
 ### DVC Пайплайн
 
@@ -193,24 +216,58 @@ dvc pull
 # url = s3://dvc-storage-tlm
 # endpointurl = https://storage.yandexcloud.net
 # region = ru-central1
+```
 
-# Скачивание данных (dvc pull)
-# Для PULL ключи НЕ нужны, если bucket настроен на публичный доступ для чтения
+#### Настройка credentials для доступа
+
+**⚠️ ВАЖНО: Для работы `dvc pull` нужны ключи доступа!**
+
+Если при выполнении `dvc pull` возникает ошибка "unable location credentials", необходимо настроить ключи доступа:
+
+```bash
+# Настройка ключей доступа (сохраняются в .dvc/config.local, не коммитятся)
+dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
+dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
+
+# Проверка конфигурации
+cat .dvc/config.local
+```
+
+**Получение ключей доступа:**
+
+1. Войдите в [Yandex Cloud Console](https://console.cloud.yandex.ru/)
+2. Перейдите в **Object Storage** → выберите bucket `dvc-storage-tlm`
+3. Перейдите в **Service Accounts**
+4. Создайте новый Service Account или используйте существующий
+5. Создайте **Static Access Key**
+6. Скопируйте:
+   - **Access Key ID**
+   - **Secret Access Key**
+
+**Альтернатива: переменные окружения**
+
+```bash
+# Установить переменные окружения
+export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY
+```
+
+**После настройки credentials:**
+
+```bash
+# Скачивание данных
 dvc pull
 
-# Если bucket не публичный, настройте ключи доступа:
-# dvc remote modify yandex_storage access_key_id YOUR_KEY
-# dvc remote modify yandex_storage secret_access_key YOUR_SECRET
-
-# Для PUSH всегда нужны ключи доступа в .dvc/config.local:
-# dvc remote modify --local yandex_storage access_key_id YOUR_KEY
-# dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET
+# Загрузка данных (требует права на запись)
 dvc push
 ```
 
 **Важно:**
-- **`dvc pull`** — работает без ключей, если bucket публичный (текущая настройка)
-- **`dvc push`** — всегда требует ключи доступа (хранятся в `.dvc/config.local`, не коммитятся в Git)
+- **`.dvc/config.local`** — файл с ключами, **НЕ коммитится** в Git (уже в `.gitignore`)
+- Для `dvc pull` нужны ключи с правами на чтение
+- Для `dvc push` нужны ключи с правами на запись
+- Подробные инструкции см. в файле `DVC_CREDENTIALS.md`
+
 
 ### Альтернатива: Локальное хранилище
 
