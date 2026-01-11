@@ -33,7 +33,7 @@ python training/classification/scripts/test_inference.py \
     --output outputs/test_predictions.csv
 ```
 
-**Получение ключей доступа:** См. раздел [Настройка credentials](#настройка-credentials-для-доступа) ниже или файл `DVC_CREDENTIALS.md`
+**Получение ключей доступа:** См. файл `DVC_CREDENTIALS.md`
 
 ### Проект
 - [Бизнес-цель проекта](#-бизнес-цель-проекта)
@@ -149,9 +149,6 @@ git clone https://github.com/Pikudan/MLOps.git
 cd MLOps
 pip install -r requirements-mlops.txt
 
-# Настройка credentials для Yandex Object Storage (обязательно!)
-# Публичные ключи для чтения см. в DVC_CREDENTIALS.md
-# Или получите свои ключи в Yandex Cloud Console
 dvc remote modify --local yandex_storage access_key_id YOUR_ACCESS_KEY_ID
 dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET_ACCESS_KEY
 
@@ -367,8 +364,7 @@ docker images ml-app:v1
 # Создать директории для данных
 mkdir -p data/input data/output
 
-# Скопировать изображения в data/input (пример: изображения томатов из тестового датасета)
-# Внимание: изображения имеют расширение .JPG (заглавные буквы)
+# Скопировать изображения в data/input
 cp training/classification/datasets/tomato/test/late_blight/*.JPG data/input/
 # Или скопировать несколько изображений разных классов:
 # cp training/classification/datasets/tomato/test/healthy/*.JPG data/input/
