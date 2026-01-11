@@ -15,8 +15,12 @@ git clone https://github.com/Pikudan/MLOps.git
 cd MLOps
 pip install -r requirements-mlops.txt
 
-# Получение лучшей модели через DVC
-dvc pull training/models/tomato_large.dvc
+# Получение данных и модели через DVC (ключи НЕ нужны для pull)
+dvc pull training/classification/datasets/tomato.dvc  # Датасет
+dvc pull training/models/tomato_large.dvc            # Лучшая модель
+
+# Или получить все данные одной командой
+# dvc pull
 
 # Тестирование модели
 python training/classification/scripts/test_inference.py \
@@ -190,14 +194,23 @@ dvc pull
 # endpointurl = https://storage.yandexcloud.net
 # region = ru-central1
 
-# Скачивание данных (публичный доступ для чтения)
+# Скачивание данных (dvc pull)
+# Для PULL ключи НЕ нужны, если bucket настроен на публичный доступ для чтения
 dvc pull
 
-# Для push нужны ключи доступа в .dvc/config.local:
+# Если bucket не публичный, настройте ключи доступа:
+# dvc remote modify yandex_storage access_key_id YOUR_KEY
+# dvc remote modify yandex_storage secret_access_key YOUR_SECRET
+
+# Для PUSH всегда нужны ключи доступа в .dvc/config.local:
 # dvc remote modify --local yandex_storage access_key_id YOUR_KEY
 # dvc remote modify --local yandex_storage secret_access_key YOUR_SECRET
 dvc push
 ```
+
+**Важно:**
+- **`dvc pull`** — работает без ключей, если bucket публичный (текущая настройка)
+- **`dvc push`** — всегда требует ключи доступа (хранятся в `.dvc/config.local`, не коммитятся в Git)
 
 ### Альтернатива: Локальное хранилище
 
