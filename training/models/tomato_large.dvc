@@ -1,0 +1,6 @@
+outs:
+- md5: e9c66c4eda006a2459cb576ccb0036b2.dir
+  size: 1217705
+  path: tomato_large
+  nfiles: 2
+  hash: md5

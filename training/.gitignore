@@ -1,4 +1,7 @@
 logs/
+# Разрешаем .dvc файлы для моделей
+!models/*.dvc
+!models/**/*.dvc
 models/
 detection/yolo/runs/
 detection/yolo/**/*.pt
